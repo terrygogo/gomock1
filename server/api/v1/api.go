@@ -1,7 +1,7 @@
 package v1
 
 import (
-	"encoding/json"
+	// "encoding/json"
 	"fmt"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
@@ -108,6 +108,12 @@ func GetJSONFile(w http.ResponseWriter, r *http.Request) {
 // SetJSONFile ff
 func SetJSONFile(w http.ResponseWriter, r *http.Request) {
 	//  data := r.Context().Value("")
+	   reqBody, err := ioutil.ReadAll(r.Body)
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf("%s", reqBody)
+		/*
   	decoder := json.NewDecoder(r.Body)
     bb := r.Body
 	var t test_struct
@@ -118,7 +124,7 @@ func SetJSONFile(w http.ResponseWriter, r *http.Request) {
 	}
   	fmt.Println(bb)
 	fmt.Println(t.FirstName)
-
+ */
 	// name := chi.URLParam(r, "name")
  
 	// Open our jsonFile
@@ -132,12 +138,12 @@ func SetJSONFile(w http.ResponseWriter, r *http.Request) {
 
 	// defer the closing of our jsonFile so that we can parse it later on
 	// defer jsonFile.Close()
-	message := []byte("Hello, Gophers!")
-	err1 := ioutil.WriteFile("./server/data/user1.json", message, 0644)
+ 
+	err1 := ioutil.WriteFile("./server/data/user1.json", []byte(reqBody), 0644)
 	if err1 != nil {
 		log.Fatal(err1)
 	}
-	byteValue, _ := ioutil.ReadFile("./server/data/user.json")
+	byteValue, _ := ioutil.ReadFile("./server/data/user1.json")
 	/*
 		basket := FruitBasket{
 			Name:  "Standard",
