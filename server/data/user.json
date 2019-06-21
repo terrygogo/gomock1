@@ -1,0 +1,138 @@
+{
+	"type": "object",
+	"title": "Monitor Settings",
+	"properties": {
+		"user": {
+			"type": "array",
+			"title": "user Register and Settings",
+			"format": "table",
+			"items": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"kimchi": {
+						"type": "string"
+					},
+					"auth": {
+						"type": "string",
+						"enum": [
+							"super",
+							"user"
+						],
+						"default": "super"
+					},
+					"password": {
+						"type": "string",
+						"format": "password"
+					}
+				}
+			}
+		},
+		"server": {
+			"type": "array",
+			"title": "Server Register and Setting",
+			"format": "table",
+			"items": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"loc": {
+				  	"type": "string",
+					  "enum": [
+					  	"Inner",
+						  "Outer"
+					  ],
+						"default": "Inner"
+					},
+					"IP": {
+						"type": "string"
+					},
+					"PORT": {
+						"type": "number"
+					},
+					"account": {
+						"type": "string"
+					},
+					"password": {
+						"type": "string",
+						"format": "password"
+					},
+					"service": {
+              "type": "array",
+              "format": "checkbox",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "fcp2",
+                  "urlrelay",
+                  "send2",
+                  "mailforward"
+                ]
+              },
+              "uniqueItems": true
+            }
+				}
+			}
+		},
+		"monitor": {
+			"type": "object",
+			"title": "Monitor Setting",
+			"properties": {
+				"cpu": {
+					"format": "grid",
+					"properties": {
+						"threshold": {
+							"type": "string",
+							"enum": [
+								"80%",
+								"60%"
+							],
+							"default": "80%"
+						},
+						"timer": {
+							"type": "number",
+							"default": "10000"
+						}
+					}
+				},
+				"memory": {
+					"format": "grid",
+					"properties": {
+						"threshold": {
+							"type": "string",
+							"enum": [
+								"80%",
+								"60%"
+							],
+							"default": "80%"
+						},
+						"timer": {
+							"type": "number",
+							"default": "10000"
+						}
+					}
+				},
+				"disk": {
+					"format": "grid",
+					"properties": {
+						"threshold": {
+							"title": "shold",
+							"type": "string",
+							"enum": [
+								"80%",
+								"60%"
+							],
+							"default": "80%"
+						},
+						"timer": {
+							"type": "number",
+							"default": "10000"
+						}
+					}
+				}
+			}
+		}
+	}
+}
