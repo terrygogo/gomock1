@@ -8,6 +8,9 @@ import (
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/mem"
 	"github.com/shirou/gopsutil/net"
+	// "time"
+
+	"github.com/mackerelio/go-osstat/network"
 	"io/ioutil"
 	"net/http"
 	//"os"
@@ -87,46 +90,45 @@ func GetJSONFile(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(string(jsonData))*/
 	jsonResponse(w, string(byteValue), http.StatusOK)
 	/*
-		enableCors(&w)
-		bp := new(bytes.Buffer)
-		if err := json.Compact(bp, byteValue); err != nil {
-			fmt.Println(err)
-		}
-		papaa := fmt.Sprintf("%s", bp)
-		mama, err := strconv.Unquote(papaa)
-	        if ( err != nil ) {
-	           fmt.Println( err) }
-		render.JSON(w, r, mama) */
+			enableCors(&w)
+			bp := new(bytes.Buffer)
+			if err := json.Compact(bp, byteValue); err != nil {
+				fmt.Println(err)
+			}
+			papaa := fmt.Sprintf("%s", bp)
+			mama, err := strconv.Unquote(papaa)
+		        if ( err != nil ) {
+		           fmt.Println( err) }
+			render.JSON(w, r, mama) */
 }
 
- 
- type test_struct struct {
-	FirstName string 
-	LastName string 
+type test_struct struct {
+	FirstName string
+	LastName  string
 }
 
 // SetJSONFile ff
 func SetJSONFile(w http.ResponseWriter, r *http.Request) {
 	//  data := r.Context().Value("")
-	   reqBody, err := ioutil.ReadAll(r.Body)
-    if err != nil {
-        log.Fatal(err)
-    }
-    fmt.Printf("%s", reqBody)
-		/*
-  	decoder := json.NewDecoder(r.Body)
-    bb := r.Body
-	var t test_struct
-	err := decoder.Decode(&t)
-
+	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-  	fmt.Println(bb)
-	fmt.Println(t.FirstName)
- */
+	fmt.Printf("%s", reqBody)
+	/*
+		  	decoder := json.NewDecoder(r.Body)
+		    bb := r.Body
+			var t test_struct
+			err := decoder.Decode(&t)
+
+			if err != nil {
+				panic(err)
+			}
+		  	fmt.Println(bb)
+			fmt.Println(t.FirstName)
+	*/
 	// name := chi.URLParam(r, "name")
- 
+
 	// Open our jsonFile
 	//  dir, err := os.Getwd()
 	//  fmt.Println(dir)
@@ -138,7 +140,7 @@ func SetJSONFile(w http.ResponseWriter, r *http.Request) {
 
 	// defer the closing of our jsonFile so that we can parse it later on
 	// defer jsonFile.Close()
- 
+
 	err1 := ioutil.WriteFile("./server/data/user1.json", []byte(reqBody), 0644)
 	if err1 != nil {
 		log.Fatal(err1)
@@ -167,6 +169,73 @@ func dealwithErr(err error) {
 		fmt.Println(err)
 		//os.Exit(-1)
 	}
+}
+
+// ServerStats define rerun fields
+type ServerStats struct {
+	HostName         string
+	Uptime           string
+	NumOfProcess     string
+	CPUUsed          string
+	MemoryUsed       string
+	DiskUsed         string
+	NetworkBytesSent string
+	NetworkBytesRead string
+	RxBytes          string
+	TxBytes          string
+}
+
+// ServerResourceStats return server resource statat in JSON
+func ServerResourceStats(w http.ResponseWriter, r *http.Request) {
+
+	rj := new(ServerStats)
+
+	vmStat, err := mem.VirtualMemory()
+	dealwithErr(err)
+	hostStat, err := host.Info()
+	dealwithErr(err)
+	diskStat, err := disk.Usage("/")
+
+	dealwithErr(err)
+
+	// cpu - get CPU number of cores and speed
+
+	cpercentage, err := cpu.Percent(0, true)
+	dealwithErr(err)
+
+	rj.MemoryUsed = strconv.FormatFloat(vmStat.UsedPercent, 'f', 2, 64)
+	// get disk serial number.... strange... not available from disk package at compile time
+	// undefined: disk.GetDiskSerialNumber
+	//serial := disk.GetDiskSerialNumber("/dev/sda")
+
+	//html = html + "Disk serial number: " + serial + "<br>"
+
+	rj.DiskUsed = strconv.FormatFloat(diskStat.UsedPercent, 'f', 2, 64)
+
+	rj.CPUUsed = strconv.FormatFloat(cpercentage[0], 'f', 2, 64)
+
+	rj.HostName = hostStat.Hostname
+	rj.Uptime = strconv.FormatUint(hostStat.Uptime, 10)
+	rj.NumOfProcess = strconv.FormatUint(hostStat.Procs, 10)
+	netiocounter, err := net.IOCounters(false)
+	rj.NetworkBytesRead = strconv.FormatUint(netiocounter[0].BytesRecv, 10)
+	rj.NetworkBytesSent = strconv.FormatUint(netiocounter[0].BytesSent, 10)
+	before, err := network.Get()
+	if err != nil {
+
+		return
+	}
+	//time.Sleep(time.Duration(1) * time.Second)
+//	after, err := network.Get()
+	//if err != nil {
+
+	//	return
+//	}
+	//rj.RxBytes = strconv.FormatUint((after[3].RxBytes-before[3].RxBytes), 10)
+	//rj.TxBytes = strconv.FormatUint((after[3].TxBytes-before[3].TxBytes), 10)
+		rj.RxBytes = strconv.FormatUint(( before[3].RxBytes), 10)
+	rj.TxBytes = strconv.FormatUint(( before[3].TxBytes), 10)
+	jsonResponseStruct(w, rj, http.StatusOK)
 }
 
 //GetSystemMeters ss
@@ -303,6 +372,8 @@ func NewRouter() http.Handler {
 	r.Get("/getsystemmeters", GetSystemMeters)
 	r.Get("/getjsonfil/{name}", GetJSONFile)
 	r.Post("/setjsonfil", SetJSONFile)
+	r.Get("/getserverresourcestates", ServerResourceStats)
+
 	r.Get("/{name}", HelloName)
 
 	return r
